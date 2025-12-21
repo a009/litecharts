@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import calendar
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+from .types import OhlcData, SingleValueData
 
 
 def to_unix_timestamp(time_value: int | float | str | datetime) -> int:
@@ -65,7 +65,7 @@ def _normalize_ohlc_columns(columns: Sequence[str]) -> dict[str, str]:
     return column_map
 
 
-def _convert_dataframe_to_ohlc(df: object) -> list[dict[str, Any]]:
+def _convert_dataframe_to_ohlc(df: object) -> list[OhlcData | SingleValueData]:
     """Convert a pandas DataFrame to OHLC data format.
 
     Args:
@@ -77,14 +77,14 @@ def _convert_dataframe_to_ohlc(df: object) -> list[dict[str, Any]]:
     columns = list(df.columns)  # type: ignore[attr-defined]
     col_map = _normalize_ohlc_columns(columns)
 
-    result: list[dict[str, Any]] = []
+    result: list[OhlcData | SingleValueData] = []
 
     # Check if index is datetime-like
     index = df.index  # type: ignore[attr-defined]
     has_datetime_index = hasattr(index, "to_pydatetime") or hasattr(index, "asi8")
 
     for i, row in enumerate(df.itertuples(index=True)):  # type: ignore[attr-defined]
-        data: dict[str, Any] = {}
+        data: OhlcData = {}
 
         # Handle time from index or column
         if "time" in col_map:
@@ -110,7 +110,7 @@ def _convert_dataframe_to_ohlc(df: object) -> list[dict[str, Any]]:
     return result
 
 
-def _convert_dataframe_to_single_value(df: object) -> list[dict[str, Any]]:
+def _convert_dataframe_to_single_value(df: object) -> list[OhlcData | SingleValueData]:
     """Convert a pandas DataFrame/Series to single-value data format.
 
     Args:
@@ -119,7 +119,7 @@ def _convert_dataframe_to_single_value(df: object) -> list[dict[str, Any]]:
     Returns:
         List of dicts with time and value.
     """
-    result: list[dict[str, Any]] = []
+    result: list[OhlcData | SingleValueData] = []
     index = df.index  # type: ignore[attr-defined]
     has_datetime_index = hasattr(index, "to_pydatetime") or hasattr(index, "asi8")
 
@@ -127,7 +127,7 @@ def _convert_dataframe_to_single_value(df: object) -> list[dict[str, Any]]:
     if hasattr(df, "items") and not hasattr(df, "columns"):
         # It's a Series
         for idx_val, value in df.items():
-            item_data: dict[str, Any] = {"value": float(value)}
+            item_data: SingleValueData = {"value": float(value)}
             if has_datetime_index:
                 item_data["time"] = to_unix_timestamp(idx_val)
             else:
@@ -140,7 +140,7 @@ def _convert_dataframe_to_single_value(df: object) -> list[dict[str, Any]]:
     col_map = _normalize_ohlc_columns(columns)
 
     for i, row in enumerate(df.itertuples(index=True)):  # type: ignore[attr-defined]
-        data: dict[str, Any] = {}
+        data: SingleValueData = {}
 
         # Handle time
         if "time" in col_map:
@@ -170,7 +170,7 @@ def _convert_dataframe_to_single_value(df: object) -> list[dict[str, Any]]:
     return result
 
 
-def _convert_numpy_to_ohlc(arr: object) -> list[dict[str, Any]]:
+def _convert_numpy_to_ohlc(arr: object) -> list[OhlcData | SingleValueData]:
     """Convert a numpy array to OHLC data format.
 
     Expects array with shape (n, 5) for [time, open, high, low, close]
@@ -183,11 +183,11 @@ def _convert_numpy_to_ohlc(arr: object) -> list[dict[str, Any]]:
         List of dicts with OHLC data.
     """
     array_list = arr.tolist()  # type: ignore[attr-defined]
-    result: list[dict[str, Any]] = []
+    result: list[OhlcData | SingleValueData] = []
 
     for row in array_list:
         if len(row) >= 5:
-            data = {
+            data: OhlcData = {
                 "time": to_unix_timestamp(row[0]),
                 "open": float(row[1]),
                 "high": float(row[2]),
@@ -199,10 +199,10 @@ def _convert_numpy_to_ohlc(arr: object) -> list[dict[str, Any]]:
             result.append(data)
         elif len(row) == 2:
             result.append(
-                {
-                    "time": to_unix_timestamp(row[0]),
-                    "value": float(row[1]),
-                }
+                SingleValueData(
+                    time=to_unix_timestamp(row[0]),
+                    value=float(row[1]),
+                )
             )
         else:
             msg = f"Unexpected array row length: {len(row)}"
@@ -211,7 +211,9 @@ def _convert_numpy_to_ohlc(arr: object) -> list[dict[str, Any]]:
     return result
 
 
-def _convert_list_of_dicts(data: list[Mapping[str, Any]]) -> list[dict[str, Any]]:
+def _convert_list_of_dicts(
+    data: list[Mapping[str, Any]],
+) -> list[OhlcData | SingleValueData]:
     """Convert a list of dicts, normalizing time values.
 
     Args:
@@ -220,10 +222,10 @@ def _convert_list_of_dicts(data: list[Mapping[str, Any]]) -> list[dict[str, Any]
     Returns:
         List of dicts with normalized time values.
     """
-    result: list[dict[str, Any]] = []
+    result: list[OhlcData | SingleValueData] = []
 
     for item in data:
-        normalized = dict(item)
+        normalized: OhlcData | SingleValueData = dict(item)  # type: ignore[assignment]
         if "time" in normalized:
             normalized["time"] = to_unix_timestamp(normalized["time"])
         result.append(normalized)
@@ -231,7 +233,7 @@ def _convert_list_of_dicts(data: list[Mapping[str, Any]]) -> list[dict[str, Any]
     return result
 
 
-def to_lwc_ohlc_data(data: object) -> list[dict[str, Any]]:
+def to_lwc_ohlc_data(data: object) -> list[OhlcData | SingleValueData]:
     """Convert various data formats to LWC OHLC data format.
 
     Args:
@@ -259,7 +261,7 @@ def to_lwc_ohlc_data(data: object) -> list[dict[str, Any]]:
     raise TypeError(msg)
 
 
-def to_lwc_single_value_data(data: object) -> list[dict[str, Any]]:
+def to_lwc_single_value_data(data: object) -> list[OhlcData | SingleValueData]:
     """Convert various data formats to LWC single-value data format.
 
     Args:
@@ -320,3 +322,17 @@ def convert_options_to_js(options: Mapping[str, Any]) -> dict[str, Any]:
             result[camel_key] = value
 
     return result
+
+
+def convert_options_to_js_list(
+    items: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Convert a list of dicts with snake_case keys to camelCase.
+
+    Args:
+        items: List of dicts.
+
+    Returns:
+        List of dicts with camelCase keys.
+    """
+    return [convert_options_to_js(item) for item in items]

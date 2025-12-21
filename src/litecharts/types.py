@@ -2,7 +2,50 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
+
+
+class PriceScaleMargins(TypedDict, total=False):
+    """Margins for the price scale."""
+
+    top: float
+    bottom: float
+
+
+class AxisPressedMouseMoveOptions(TypedDict, total=False):
+    """Options for axis scaling via mouse drag."""
+
+    time: bool
+    price: bool
+
+
+class AxisDoubleClickOptions(TypedDict, total=False):
+    """Options for axis reset via double-click."""
+
+    time: bool
+    price: bool
+
+
+class PriceFormat(TypedDict, total=False):
+    """Price format options."""
+
+    type: Literal["price", "volume", "percent", "custom"]
+    precision: int
+    min_move: float
+
+
+class AutoScaleMargins(TypedDict, total=False):
+    """Auto-scale margins in pixels."""
+
+    above: float
+    below: float
+
+
+class BaseValuePrice(TypedDict, total=False):
+    """Base value for baseline series."""
+
+    type: Literal["price"]
+    price: float
 
 
 class LayoutOptions(TypedDict, total=False):
@@ -78,7 +121,7 @@ class PriceScaleOptions(TypedDict, total=False):
     mode: int
     invert_scale: bool
     align_labels: bool
-    scale_margins: dict[str, Any]
+    scale_margins: PriceScaleMargins
     border_visible: bool
     border_color: str
     text_color: str
@@ -100,8 +143,8 @@ class HandleScrollOptions(TypedDict, total=False):
 class HandleScaleOptions(TypedDict, total=False):
     """Handle scale options."""
 
-    axis_pressed_mouse_move: bool | dict[str, Any]
-    axis_double_click_reset: bool | dict[str, Any]
+    axis_pressed_mouse_move: bool | AxisPressedMouseMoveOptions
+    axis_double_click_reset: bool | AxisDoubleClickOptions
     mouse_wheel: bool
     pinch: bool
 
@@ -145,7 +188,7 @@ class ChartOptions(TypedDict, total=False):
     time_scale: TimeScaleOptions
     right_price_scale: PriceScaleOptions
     left_price_scale: PriceScaleOptions
-    overlay_price_scales: dict[str, Any]
+    overlay_price_scales: dict[str, PriceScaleOptions]
     handle_scroll: HandleScrollOptions | bool
     handle_scale: HandleScaleOptions | bool
     kinetic_scroll: KineticScrollOptions
@@ -187,9 +230,9 @@ class BaseSeriesOptions(TypedDict, total=False):
     base_line_color: str
     base_line_width: int
     base_line_style: int
-    price_format: dict[str, Any]
+    price_format: PriceFormat
     price_scale_id: str
-    auto_scale_margins: dict[str, Any]
+    auto_scale_margins: AutoScaleMargins
 
 
 class CandlestickSeriesOptions(BaseSeriesOptions, total=False):
@@ -265,7 +308,7 @@ class HistogramSeriesOptions(BaseSeriesOptions, total=False):
 class BaselineSeriesOptions(BaseSeriesOptions, total=False):
     """Options for baseline series."""
 
-    base_value: dict[str, Any]
+    base_value: BaseValuePrice
     top_fill_color1: str
     top_fill_color2: str
     top_line_color: str
@@ -314,6 +357,7 @@ class OhlcData(TypedDict, total=False):
     high: float
     low: float
     close: float
+    volume: float
 
 
 class SingleValueData(TypedDict, total=False):

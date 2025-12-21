@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from .pane import Pane
 from .series import (
@@ -52,7 +52,7 @@ class Chart:
             options: Chart options.
         """
         self._id = f"chart_{uuid.uuid4().hex[:8]}"
-        self._options = dict(options) if options else {}
+        self._options: ChartOptions = dict(options) if options else {}  # type: ignore[assignment]
         self._panes: list[Pane] = []
         self._default_pane: Pane | None = None
 
@@ -62,7 +62,7 @@ class Chart:
         return self._id
 
     @property
-    def options(self) -> dict[str, Any]:
+    def options(self) -> ChartOptions:
         """Return the chart options."""
         return self._options
 

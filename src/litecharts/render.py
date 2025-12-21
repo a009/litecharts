@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ._js import get_lwc_js
-from .convert import convert_options_to_js
+from .convert import convert_options_to_js, convert_options_to_js_list
 
 if TYPE_CHECKING:
     from .chart import Chart
@@ -39,72 +39,6 @@ def _render_series_js(series: BaseSeries, chart_var: str) -> str:
         lines.append(f"{series_var}.setMarkers({markers_js});")
 
     return "\n    ".join(lines)
-
-
-def convert_options_to_js_list(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Convert a list of dicts with snake_case keys to camelCase.
-
-    Args:
-        items: List of dicts.
-
-    Returns:
-        List of dicts with camelCase keys.
-    """
-    return [convert_options_to_js(item) for item in items]
-
-
-def _render_pane_js(
-    pane: Pane,
-    container_id: str,
-    chart_options: dict[str, Any],
-    pane_index: int,
-    total_panes: int,
-    chart_height: int,
-) -> tuple[str, str]:
-    """Generate JS code for a pane.
-
-    Args:
-        pane: The pane to render.
-        container_id: The container div ID.
-        chart_options: Base chart options.
-        pane_index: Index of this pane.
-        total_panes: Total number of panes.
-        chart_height: Total chart height.
-
-    Returns:
-        Tuple of (chart variable name, JavaScript code string).
-    """
-    chart_var = f"chart_{pane.id}"
-    pane_container = f"{container_id}_pane_{pane_index}"
-
-    # Calculate height based on ratio
-    total_ratio = 1.0  # Will be calculated from all panes
-    pane_height = int(chart_height * pane.height_ratio / total_ratio)
-
-    # Merge chart options with pane-specific settings
-    pane_options = dict(chart_options)
-    pane_options["height"] = pane_height
-
-    # Hide time scale on all but last pane
-    if pane_index < total_panes - 1:
-        time_scale = pane_options.get("time_scale", {})
-        time_scale["visible"] = False
-        pane_options["time_scale"] = time_scale
-
-    options_js = json.dumps(convert_options_to_js(pane_options))
-
-    lines = [
-        f"const {chart_var} = LightweightCharts.createChart(",
-        f"      document.getElementById('{pane_container}'),",
-        f"      {options_js}",
-        "    );",
-    ]
-
-    # Add series
-    for series in pane.series:
-        lines.append(f"    {_render_series_js(series, chart_var)}")
-
-    return chart_var, "\n    ".join(lines)
 
 
 def _calculate_pane_heights(panes: list[Pane], total_height: int) -> list[int]:
@@ -209,8 +143,11 @@ def render_chart(chart: Chart) -> str:
 
         # Hide time scale on all but last pane for cleaner stacking
         if i < len(panes) - 1:
-            time_scale = dict(pane_options.get("time_scale", {}))
-            time_scale["visible"] = False
+            existing_ts = pane_options.get("time_scale")
+            if existing_ts:
+                time_scale = {**cast(dict[str, Any], existing_ts), "visible": False}
+            else:
+                time_scale = {"visible": False}
             pane_options["time_scale"] = time_scale
 
         chart_var = f"chart_{pane.id}"

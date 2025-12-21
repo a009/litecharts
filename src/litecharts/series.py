@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from .convert import to_lwc_ohlc_data, to_lwc_single_value_data
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from .types import (
         AreaSeriesOptions,
         BarSeriesOptions,
         BaselineSeriesOptions,
+        BaseSeriesOptions,
         CandlestickSeriesOptions,
         HistogramSeriesOptions,
         LineSeriesOptions,
         Marker,
+        OhlcData,
+        SingleValueData,
     )
 
 
@@ -26,16 +27,16 @@ class BaseSeries:
 
     _series_type: str = "Line"
 
-    def __init__(self, options: Mapping[str, Any] | None = None) -> None:
+    def __init__(self, options: BaseSeriesOptions | None = None) -> None:
         """Initialize the series.
 
         Args:
             options: Series options.
         """
         self._id = f"series_{uuid.uuid4().hex[:8]}"
-        self._options = dict(options) if options else {}
-        self._data: list[dict[str, Any]] = []
-        self._markers: list[dict[str, Any]] = []
+        self._options: BaseSeriesOptions = dict(options) if options else {}  # type: ignore[assignment]
+        self._data: list[OhlcData | SingleValueData] = []
+        self._markers: list[Marker] = []
 
     @property
     def id(self) -> str:
@@ -48,17 +49,17 @@ class BaseSeries:
         return self._series_type
 
     @property
-    def options(self) -> dict[str, Any]:
+    def options(self) -> BaseSeriesOptions:
         """Return the series options."""
         return self._options
 
     @property
-    def data(self) -> list[dict[str, Any]]:
+    def data(self) -> list[OhlcData | SingleValueData]:
         """Return the series data."""
         return self._data
 
     @property
-    def markers(self) -> list[dict[str, Any]]:
+    def markers(self) -> list[Marker]:
         """Return the series markers."""
         return self._markers
 
@@ -70,11 +71,11 @@ class BaseSeries:
         """
         self._data = self._convert_data(data)
 
-    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+    def _convert_data(self, data: object) -> list[OhlcData | SingleValueData]:
         """Convert data to LWC format. Override in subclasses."""
         return to_lwc_single_value_data(data)
 
-    def update(self, bar: dict[str, Any]) -> None:
+    def update(self, bar: OhlcData | SingleValueData) -> None:
         """Update with a single data point.
 
         Args:
@@ -82,7 +83,7 @@ class BaseSeries:
         """
         from .convert import to_unix_timestamp
 
-        normalized = dict(bar)
+        normalized: OhlcData | SingleValueData = dict(bar)  # type: ignore[assignment]
         if "time" in normalized:
             normalized["time"] = to_unix_timestamp(normalized["time"])
         self._data.append(normalized)
@@ -97,10 +98,10 @@ class BaseSeries:
 
         self._markers = []
         for marker in markers:
-            normalized = dict(marker)
+            normalized: Marker = dict(marker)  # type: ignore[assignment]
             if "time" in normalized:
                 time_val = normalized["time"]
-                normalized["time"] = to_unix_timestamp(time_val)  # type: ignore[arg-type]
+                normalized["time"] = to_unix_timestamp(time_val)
             self._markers.append(normalized)
 
 
@@ -117,7 +118,7 @@ class CandlestickSeries(BaseSeries):
         """
         super().__init__(options)
 
-    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+    def _convert_data(self, data: object) -> list[OhlcData | SingleValueData]:
         """Convert data to OHLC format."""
         return to_lwc_ohlc_data(data)
 
@@ -163,7 +164,7 @@ class BarSeries(BaseSeries):
         """
         super().__init__(options)
 
-    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+    def _convert_data(self, data: object) -> list[OhlcData | SingleValueData]:
         """Convert data to OHLC format."""
         return to_lwc_ohlc_data(data)
 
