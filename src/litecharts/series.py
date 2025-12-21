@@ -1,0 +1,196 @@
+"""Series classes for litecharts."""
+
+from __future__ import annotations
+
+import uuid
+from typing import TYPE_CHECKING, Any
+
+from .convert import to_lwc_ohlc_data, to_lwc_single_value_data
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from .types import (
+        AreaSeriesOptions,
+        BarSeriesOptions,
+        BaselineSeriesOptions,
+        CandlestickSeriesOptions,
+        HistogramSeriesOptions,
+        LineSeriesOptions,
+        Marker,
+    )
+
+
+class BaseSeries:
+    """Base class for all series types."""
+
+    _series_type: str = "Line"
+
+    def __init__(self, options: Mapping[str, Any] | None = None) -> None:
+        """Initialize the series.
+
+        Args:
+            options: Series options.
+        """
+        self._id = f"series_{uuid.uuid4().hex[:8]}"
+        self._options = dict(options) if options else {}
+        self._data: list[dict[str, Any]] = []
+        self._markers: list[dict[str, Any]] = []
+
+    @property
+    def id(self) -> str:
+        """Return the series ID."""
+        return self._id
+
+    @property
+    def series_type(self) -> str:
+        """Return the series type name."""
+        return self._series_type
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return the series options."""
+        return self._options
+
+    @property
+    def data(self) -> list[dict[str, Any]]:
+        """Return the series data."""
+        return self._data
+
+    @property
+    def markers(self) -> list[dict[str, Any]]:
+        """Return the series markers."""
+        return self._markers
+
+    def set_data(self, data: object) -> None:
+        """Set the series data.
+
+        Args:
+            data: Data as list of dicts, pandas DataFrame/Series, or numpy array.
+        """
+        self._data = self._convert_data(data)
+
+    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+        """Convert data to LWC format. Override in subclasses."""
+        return to_lwc_single_value_data(data)
+
+    def update(self, bar: dict[str, Any]) -> None:
+        """Update with a single data point.
+
+        Args:
+            bar: Single data point dict.
+        """
+        from .convert import to_unix_timestamp
+
+        normalized = dict(bar)
+        if "time" in normalized:
+            normalized["time"] = to_unix_timestamp(normalized["time"])
+        self._data.append(normalized)
+
+    def set_markers(self, markers: list[Marker]) -> None:
+        """Set markers on the series.
+
+        Args:
+            markers: List of marker dicts.
+        """
+        from .convert import to_unix_timestamp
+
+        self._markers = []
+        for marker in markers:
+            normalized = dict(marker)
+            if "time" in normalized:
+                time_val = normalized["time"]
+                normalized["time"] = to_unix_timestamp(time_val)  # type: ignore[arg-type]
+            self._markers.append(normalized)
+
+
+class CandlestickSeries(BaseSeries):
+    """Candlestick chart series."""
+
+    _series_type = "Candlestick"
+
+    def __init__(self, options: CandlestickSeriesOptions | None = None) -> None:
+        """Initialize the candlestick series.
+
+        Args:
+            options: Candlestick series options.
+        """
+        super().__init__(options)
+
+    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+        """Convert data to OHLC format."""
+        return to_lwc_ohlc_data(data)
+
+
+class LineSeries(BaseSeries):
+    """Line chart series."""
+
+    _series_type = "Line"
+
+    def __init__(self, options: LineSeriesOptions | None = None) -> None:
+        """Initialize the line series.
+
+        Args:
+            options: Line series options.
+        """
+        super().__init__(options)
+
+
+class AreaSeries(BaseSeries):
+    """Area chart series."""
+
+    _series_type = "Area"
+
+    def __init__(self, options: AreaSeriesOptions | None = None) -> None:
+        """Initialize the area series.
+
+        Args:
+            options: Area series options.
+        """
+        super().__init__(options)
+
+
+class BarSeries(BaseSeries):
+    """Bar chart series (OHLC bars)."""
+
+    _series_type = "Bar"
+
+    def __init__(self, options: BarSeriesOptions | None = None) -> None:
+        """Initialize the bar series.
+
+        Args:
+            options: Bar series options.
+        """
+        super().__init__(options)
+
+    def _convert_data(self, data: object) -> list[dict[str, Any]]:
+        """Convert data to OHLC format."""
+        return to_lwc_ohlc_data(data)
+
+
+class HistogramSeries(BaseSeries):
+    """Histogram chart series."""
+
+    _series_type = "Histogram"
+
+    def __init__(self, options: HistogramSeriesOptions | None = None) -> None:
+        """Initialize the histogram series.
+
+        Args:
+            options: Histogram series options.
+        """
+        super().__init__(options)
+
+
+class BaselineSeries(BaseSeries):
+    """Baseline chart series."""
+
+    _series_type = "Baseline"
+
+    def __init__(self, options: BaselineSeriesOptions | None = None) -> None:
+        """Initialize the baseline series.
+
+        Args:
+            options: Baseline series options.
+        """
+        super().__init__(options)
