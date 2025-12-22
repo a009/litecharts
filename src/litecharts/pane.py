@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .series import (
     AreaSeries,
@@ -65,86 +65,75 @@ class Pane:
             return float(result)
         return 1.0
 
-    def add_candlestick_series(
-        self, options: CandlestickSeriesOptions | None = None
-    ) -> CandlestickSeries:
-        """Add a candlestick series to the pane.
+    @overload
+    def add_series(
+        self,
+        series_type: type[CandlestickSeries],
+        options: CandlestickSeriesOptions | None = None,
+    ) -> CandlestickSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[LineSeries],
+        options: LineSeriesOptions | None = None,
+    ) -> LineSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[AreaSeries],
+        options: AreaSeriesOptions | None = None,
+    ) -> AreaSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[BarSeries],
+        options: BarSeriesOptions | None = None,
+    ) -> BarSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[HistogramSeries],
+        options: HistogramSeriesOptions | None = None,
+    ) -> HistogramSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[BaselineSeries],
+        options: BaselineSeriesOptions | None = None,
+    ) -> BaselineSeries: ...
+
+    def add_series(
+        self,
+        series_type: type[
+            CandlestickSeries
+            | LineSeries
+            | AreaSeries
+            | BarSeries
+            | HistogramSeries
+            | BaselineSeries
+        ],
+        options: CandlestickSeriesOptions
+        | LineSeriesOptions
+        | AreaSeriesOptions
+        | BarSeriesOptions
+        | HistogramSeriesOptions
+        | BaselineSeriesOptions
+        | None = None,
+    ) -> BaseSeries[SingleValueInput] | BaseSeries[OhlcInput]:
+        """Add a series to the pane.
 
         Args:
-            options: Candlestick series options.
+            series_type: The series class (e.g., CandlestickSeries, LineSeries).
+            options: Series options specific to the series type.
 
         Returns:
-            The created CandlestickSeries.
+            The created series instance.
         """
-        series = CandlestickSeries(options)
-        self._series.append(series)
-        return series
-
-    def add_line_series(self, options: LineSeriesOptions | None = None) -> LineSeries:
-        """Add a line series to the pane.
-
-        Args:
-            options: Line series options.
-
-        Returns:
-            The created LineSeries.
-        """
-        series = LineSeries(options)
-        self._series.append(series)
-        return series
-
-    def add_area_series(self, options: AreaSeriesOptions | None = None) -> AreaSeries:
-        """Add an area series to the pane.
-
-        Args:
-            options: Area series options.
-
-        Returns:
-            The created AreaSeries.
-        """
-        series = AreaSeries(options)
-        self._series.append(series)
-        return series
-
-    def add_bar_series(self, options: BarSeriesOptions | None = None) -> BarSeries:
-        """Add a bar series to the pane.
-
-        Args:
-            options: Bar series options.
-
-        Returns:
-            The created BarSeries.
-        """
-        series = BarSeries(options)
-        self._series.append(series)
-        return series
-
-    def add_histogram_series(
-        self, options: HistogramSeriesOptions | None = None
-    ) -> HistogramSeries:
-        """Add a histogram series to the pane.
-
-        Args:
-            options: Histogram series options.
-
-        Returns:
-            The created HistogramSeries.
-        """
-        series = HistogramSeries(options)
-        self._series.append(series)
-        return series
-
-    def add_baseline_series(
-        self, options: BaselineSeriesOptions | None = None
-    ) -> BaselineSeries:
-        """Add a baseline series to the pane.
-
-        Args:
-            options: Baseline series options.
-
-        Returns:
-            The created BaselineSeries.
-        """
-        series = BaselineSeries(options)
+        series = series_type(options)  # type: ignore[arg-type]
         self._series.append(series)
         return series

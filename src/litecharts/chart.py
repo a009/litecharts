@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .pane import Pane
 from .series import (
@@ -17,6 +17,7 @@ from .series import (
 )
 
 if TYPE_CHECKING:
+    from .series import BaseSeries
     from .types import (
         AreaSeriesOptions,
         BarSeriesOptions,
@@ -25,7 +26,9 @@ if TYPE_CHECKING:
         ChartOptions,
         HistogramSeriesOptions,
         LineSeriesOptions,
+        OhlcInput,
         PaneOptions,
+        SingleValueInput,
     )
 
 
@@ -107,77 +110,95 @@ class Chart:
         self._panes.append(pane)
         return pane
 
-    def add_candlestick_series(
-        self, options: CandlestickSeriesOptions | None = None
-    ) -> CandlestickSeries:
-        """Add a candlestick series to the default pane.
+    @overload
+    def add_series(
+        self,
+        series_type: type[CandlestickSeries],
+        options: CandlestickSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> CandlestickSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[LineSeries],
+        options: LineSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> LineSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[AreaSeries],
+        options: AreaSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> AreaSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[BarSeries],
+        options: BarSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> BarSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[HistogramSeries],
+        options: HistogramSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> HistogramSeries: ...
+
+    @overload
+    def add_series(
+        self,
+        series_type: type[BaselineSeries],
+        options: BaselineSeriesOptions | None = None,
+        pane_index: int | None = None,
+    ) -> BaselineSeries: ...
+
+    def add_series(
+        self,
+        series_type: type[
+            CandlestickSeries
+            | LineSeries
+            | AreaSeries
+            | BarSeries
+            | HistogramSeries
+            | BaselineSeries
+        ],
+        options: CandlestickSeriesOptions
+        | LineSeriesOptions
+        | AreaSeriesOptions
+        | BarSeriesOptions
+        | HistogramSeriesOptions
+        | BaselineSeriesOptions
+        | None = None,
+        pane_index: int | None = None,
+    ) -> BaseSeries[SingleValueInput] | BaseSeries[OhlcInput]:
+        """Add a series to a pane.
 
         Args:
-            options: Candlestick series options.
+            series_type: The series class (e.g., CandlestickSeries, LineSeries).
+            options: Series options specific to the series type.
+            pane_index: Index of the pane to add the series to. If None, uses
+                the default pane (creating it if necessary).
 
         Returns:
-            The created CandlestickSeries.
+            The created series instance.
+
+        Raises:
+            IndexError: If pane_index is out of range.
         """
-        return self._get_default_pane().add_candlestick_series(options)
+        if pane_index is not None:
+            if pane_index < 0 or pane_index >= len(self._panes):
+                raise IndexError(f"Pane index {pane_index} out of range")
+            pane = self._panes[pane_index]
+        else:
+            pane = self._get_default_pane()
 
-    def add_line_series(self, options: LineSeriesOptions | None = None) -> LineSeries:
-        """Add a line series to the default pane.
-
-        Args:
-            options: Line series options.
-
-        Returns:
-            The created LineSeries.
-        """
-        return self._get_default_pane().add_line_series(options)
-
-    def add_area_series(self, options: AreaSeriesOptions | None = None) -> AreaSeries:
-        """Add an area series to the default pane.
-
-        Args:
-            options: Area series options.
-
-        Returns:
-            The created AreaSeries.
-        """
-        return self._get_default_pane().add_area_series(options)
-
-    def add_bar_series(self, options: BarSeriesOptions | None = None) -> BarSeries:
-        """Add a bar series to the default pane.
-
-        Args:
-            options: Bar series options.
-
-        Returns:
-            The created BarSeries.
-        """
-        return self._get_default_pane().add_bar_series(options)
-
-    def add_histogram_series(
-        self, options: HistogramSeriesOptions | None = None
-    ) -> HistogramSeries:
-        """Add a histogram series to the default pane.
-
-        Args:
-            options: Histogram series options.
-
-        Returns:
-            The created HistogramSeries.
-        """
-        return self._get_default_pane().add_histogram_series(options)
-
-    def add_baseline_series(
-        self, options: BaselineSeriesOptions | None = None
-    ) -> BaselineSeries:
-        """Add a baseline series to the default pane.
-
-        Args:
-            options: Baseline series options.
-
-        Returns:
-            The created BaselineSeries.
-        """
-        return self._get_default_pane().add_baseline_series(options)
+        return pane.add_series(series_type, options)  # type: ignore[arg-type]
 
     def to_html(self) -> str:
         """Generate self-contained HTML for the chart.

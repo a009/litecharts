@@ -87,51 +87,51 @@ class TestChartAddPane:
 
 
 class TestChartAddSeries:
-    """Tests for Chart add series methods (via default pane)."""
+    """Tests for Chart add_series method (via default pane)."""
 
-    def test_add_candlestick_series_creates_default_pane(self) -> None:
-        """add_candlestick_series creates default pane if needed."""
+    def test_add_series_creates_default_pane(self) -> None:
+        """add_series creates default pane if needed."""
         chart = Chart()
-        series = chart.add_candlestick_series()
+        series = chart.add_series(CandlestickSeries)
         assert isinstance(series, CandlestickSeries)
         assert len(chart.panes) == 1
 
-    def test_add_candlestick_series_reuses_default_pane(self) -> None:
+    def test_add_series_reuses_default_pane(self) -> None:
         """Subsequent series use same default pane."""
         chart = Chart()
-        chart.add_candlestick_series()
-        chart.add_line_series()
+        chart.add_series(CandlestickSeries)
+        chart.add_series(LineSeries)
         assert len(chart.panes) == 1
         assert len(chart.panes[0].series) == 2
 
     def test_add_line_series(self) -> None:
-        """add_line_series creates LineSeries."""
+        """add_series creates LineSeries."""
         chart = Chart()
-        series = chart.add_line_series()
+        series = chart.add_series(LineSeries)
         assert isinstance(series, LineSeries)
 
     def test_add_area_series(self) -> None:
-        """add_area_series creates AreaSeries."""
+        """add_series creates AreaSeries."""
         chart = Chart()
-        series = chart.add_area_series()
+        series = chart.add_series(AreaSeries)
         assert isinstance(series, AreaSeries)
 
     def test_add_bar_series(self) -> None:
-        """add_bar_series creates BarSeries."""
+        """add_series creates BarSeries."""
         chart = Chart()
-        series = chart.add_bar_series()
+        series = chart.add_series(BarSeries)
         assert isinstance(series, BarSeries)
 
     def test_add_histogram_series(self) -> None:
-        """add_histogram_series creates HistogramSeries."""
+        """add_series creates HistogramSeries."""
         chart = Chart()
-        series = chart.add_histogram_series()
+        series = chart.add_series(HistogramSeries)
         assert isinstance(series, HistogramSeries)
 
     def test_add_baseline_series(self) -> None:
-        """add_baseline_series creates BaselineSeries."""
+        """add_series creates BaselineSeries."""
         chart = Chart()
-        series = chart.add_baseline_series()
+        series = chart.add_series(BaselineSeries)
         assert isinstance(series, BaselineSeries)
 
 
@@ -148,7 +148,7 @@ class TestChartToHtml:
     def test_to_html_with_series(self, sample_ohlc_dicts: list[DataMapping]) -> None:
         """Chart with data produces HTML with script tags."""
         chart = Chart()
-        series = chart.add_candlestick_series()
+        series = chart.add_series(CandlestickSeries)
         series.set_data(sample_ohlc_dicts)
         html = chart.to_html()
         assert "<!DOCTYPE html>" in html

@@ -5,6 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from litecharts import Chart, create_chart
+from litecharts.series import (
+    AreaSeries,
+    CandlestickSeries,
+    HistogramSeries,
+    LineSeries,
+)
 
 from .conftest import DataMapping
 
@@ -20,7 +26,7 @@ class TestEndToEndChartCreation:
     ) -> None:
         """Create a simple candlestick chart."""
         chart = create_chart({"width": 800, "height": 600})
-        series = chart.add_candlestick_series({"up_color": "#26a69a"})
+        series = chart.add_series(CandlestickSeries, {"up_color": "#26a69a"})
         series.set_data(sample_ohlc_dicts)
 
         assert len(chart.panes) == 1
@@ -35,9 +41,9 @@ class TestEndToEndChartCreation:
     ) -> None:
         """Create chart with multiple series in same pane."""
         chart = create_chart()
-        candle = chart.add_candlestick_series()
+        candle = chart.add_series(CandlestickSeries)
         candle.set_data(sample_ohlc_dicts)
-        line = chart.add_line_series({"color": "#ff0000"})
+        line = chart.add_series(LineSeries, {"color": "#ff0000"})
         line.set_data(sample_single_value_dicts)
 
         assert len(chart.panes) == 1
@@ -53,12 +59,12 @@ class TestEndToEndChartCreation:
 
         # Main price pane
         price_pane = chart.add_pane({"height_ratio": 3.0})
-        candle = price_pane.add_candlestick_series()
+        candle = price_pane.add_series(CandlestickSeries)
         candle.set_data(sample_ohlc_dicts)
 
         # Volume pane
         volume_pane = chart.add_pane({"height_ratio": 1.0})
-        histogram = volume_pane.add_histogram_series({"color": "#26a69a"})
+        histogram = volume_pane.add_series(HistogramSeries, {"color": "#26a69a"})
         histogram.set_data(sample_single_value_dicts)
 
         assert len(chart.panes) == 2
@@ -68,7 +74,7 @@ class TestEndToEndChartCreation:
     def test_chart_with_markers(self, sample_ohlc_dicts: list[DataMapping]) -> None:
         """Create chart with markers on series."""
         chart = create_chart()
-        series = chart.add_candlestick_series()
+        series = chart.add_series(CandlestickSeries)
         series.set_data(sample_ohlc_dicts)
         series.set_markers(
             [
@@ -106,8 +112,8 @@ class TestHtmlOutputRegression:
         chart._id = "chart_test0002"
         pane = chart.add_pane()
         pane._id = "pane_test0001"
-        series = pane.add_candlestick_series(
-            {"up_color": "#26a69a", "down_color": "#ef5350"}
+        series = pane.add_series(
+            CandlestickSeries, {"up_color": "#26a69a", "down_color": "#ef5350"}
         )
         series._id = "series_test0001"
         series.set_data(sample_ohlc_dicts)
@@ -127,13 +133,13 @@ class TestHtmlOutputRegression:
 
         price_pane = chart.add_pane({"height_ratio": 3.0})
         price_pane._id = "pane_test0002"
-        candle = price_pane.add_candlestick_series()
+        candle = price_pane.add_series(CandlestickSeries)
         candle._id = "series_test0002"
         candle.set_data(sample_ohlc_dicts)
 
         volume_pane = chart.add_pane({"height_ratio": 1.0})
         volume_pane._id = "pane_test0003"
-        histogram = volume_pane.add_histogram_series({"color": "#26a69a"})
+        histogram = volume_pane.add_series(HistogramSeries, {"color": "#26a69a"})
         histogram._id = "series_test0003"
         histogram.set_data(sample_single_value_dicts)
 
@@ -150,7 +156,7 @@ class TestHtmlOutputRegression:
         chart._id = "chart_test0004"
         pane = chart.add_pane()
         pane._id = "pane_test0004"
-        series = pane.add_line_series({"color": "#2196f3", "line_width": 2})
+        series = pane.add_series(LineSeries, {"color": "#2196f3", "line_width": 2})
         series._id = "series_test0004"
         series.set_data(sample_single_value_dicts)
 
@@ -167,12 +173,13 @@ class TestHtmlOutputRegression:
         chart._id = "chart_test0005"
         pane = chart.add_pane()
         pane._id = "pane_test0005"
-        series = pane.add_area_series(
+        series = pane.add_series(
+            AreaSeries,
             {
                 "line_color": "#2196f3",
                 "top_color": "rgba(33, 150, 243, 0.4)",
                 "bottom_color": "rgba(33, 150, 243, 0.0)",
-            }
+            },
         )
         series._id = "series_test0005"
         series.set_data(sample_single_value_dicts)
@@ -190,7 +197,7 @@ class TestHtmlOutputRegression:
         chart._id = "chart_test0006"
         pane = chart.add_pane()
         pane._id = "pane_test0006"
-        series = pane.add_candlestick_series()
+        series = pane.add_series(CandlestickSeries)
         series._id = "series_test0006"
         series.set_data(sample_ohlc_dicts)
         series.set_markers(

@@ -48,61 +48,61 @@ class TestPane:
 
 
 class TestPaneAddSeries:
-    """Tests for Pane add series methods."""
+    """Tests for Pane add_series method."""
 
     def test_add_candlestick_series(self) -> None:
-        """add_candlestick_series creates and adds series."""
+        """add_series creates and adds CandlestickSeries."""
         pane = Pane()
-        series = pane.add_candlestick_series()
+        series = pane.add_series(CandlestickSeries)
         assert isinstance(series, CandlestickSeries)
         assert len(pane.series) == 1
         assert pane.series[0] is series
 
     def test_add_candlestick_series_with_options(self) -> None:
-        """add_candlestick_series passes options."""
+        """add_series passes options to CandlestickSeries."""
         pane = Pane()
-        series = pane.add_candlestick_series({"up_color": "#00ff00"})
+        series = pane.add_series(CandlestickSeries, {"up_color": "#00ff00"})
         assert series.options.get("up_color") == "#00ff00"
 
     def test_add_line_series(self) -> None:
-        """add_line_series creates and adds series."""
+        """add_series creates and adds LineSeries."""
         pane = Pane()
-        series = pane.add_line_series()
+        series = pane.add_series(LineSeries)
         assert isinstance(series, LineSeries)
         assert len(pane.series) == 1
 
     def test_add_area_series(self) -> None:
-        """add_area_series creates and adds series."""
+        """add_series creates and adds AreaSeries."""
         pane = Pane()
-        series = pane.add_area_series()
+        series = pane.add_series(AreaSeries)
         assert isinstance(series, AreaSeries)
         assert len(pane.series) == 1
 
     def test_add_bar_series(self) -> None:
-        """add_bar_series creates and adds series."""
+        """add_series creates and adds BarSeries."""
         pane = Pane()
-        series = pane.add_bar_series()
+        series = pane.add_series(BarSeries)
         assert isinstance(series, BarSeries)
         assert len(pane.series) == 1
 
     def test_add_histogram_series(self) -> None:
-        """add_histogram_series creates and adds series."""
+        """add_series creates and adds HistogramSeries."""
         pane = Pane()
-        series = pane.add_histogram_series()
+        series = pane.add_series(HistogramSeries)
         assert isinstance(series, HistogramSeries)
         assert len(pane.series) == 1
 
     def test_add_baseline_series(self) -> None:
-        """add_baseline_series creates and adds series."""
+        """add_series creates and adds BaselineSeries."""
         pane = Pane()
-        series = pane.add_baseline_series()
+        series = pane.add_series(BaselineSeries)
         assert isinstance(series, BaselineSeries)
         assert len(pane.series) == 1
 
     def test_add_multiple_series(self) -> None:
         """Multiple series can be added to a pane."""
         pane = Pane()
-        pane.add_candlestick_series()
-        pane.add_line_series()
-        pane.add_histogram_series()
+        pane.add_series(CandlestickSeries)
+        pane.add_series(LineSeries)
+        pane.add_series(HistogramSeries)
         assert len(pane.series) == 3
