@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         LineSeriesOptions,
         Marker,
         OhlcData,
+        PriceLineOptions,
         SingleValueData,
     )
 
@@ -41,6 +42,7 @@ class BaseSeries(ABC, Generic[DataInputT]):
         self._options: BaseSeriesOptions = options.copy() if options else {}
         self._data: list[OhlcData | SingleValueData] = []
         self._markers: list[Marker] = []
+        self._price_lines: list[PriceLineOptions] = []
 
     @property
     def id(self) -> str:
@@ -66,6 +68,27 @@ class BaseSeries(ABC, Generic[DataInputT]):
     def markers(self) -> list[Marker]:
         """Return the series markers."""
         return self._markers
+
+    @property
+    def price_lines(self) -> list[PriceLineOptions]:
+        """Return the series price lines."""
+        return self._price_lines
+
+    def create_price_line(self, options: PriceLineOptions) -> None:
+        """Create a horizontal price line on the series.
+
+        Args:
+            options: Price line options (price is required).
+
+        Example:
+            >>> series.create_price_line({
+            ...     "price": 100.0,
+            ...     "color": "#ff0000",
+            ...     "line_style": 2,  # Dashed
+            ...     "title": "Support"
+            ... })
+        """
+        self._price_lines.append(options)
 
     def set_data(self, data: DataInputT) -> None:
         """Set the series data.

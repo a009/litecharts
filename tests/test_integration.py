@@ -267,3 +267,38 @@ class TestHtmlOutputRegression:
 
         html = chart.to_html()
         hash_checker("chart_with_markers", html)
+
+    def test_chart_with_price_lines_html(
+        self,
+        sample_ohlc_dicts: list[DataMapping],
+        hash_checker: Callable[[str, str], None],
+    ) -> None:
+        """Chart with price lines HTML output is stable."""
+        chart = Chart()
+        chart._id = "chart_test0007"
+        pane = chart.add_pane()
+        pane._id = "pane_test0007"
+        series = pane.add_series(CandlestickSeries)
+        series._id = "series_test0007"
+        series.set_data(sample_ohlc_dicts)
+
+        # Add price lines at support and resistance levels
+        series.create_price_line({
+            "price": 100.0,
+            "color": "#4caf50",
+            "line_width": 2,
+            "line_style": 2,  # Dashed
+            "title": "Support",
+            "axis_label_visible": True,
+        })
+        series.create_price_line({
+            "price": 115.0,
+            "color": "#f44336",
+            "line_width": 2,
+            "line_style": 0,  # Solid
+            "title": "Resistance",
+            "axis_label_visible": True,
+        })
+
+        html = chart.to_html()
+        hash_checker("chart_with_price_lines", html)

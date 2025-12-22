@@ -63,6 +63,11 @@ def _render_series_js(
             f"LightweightCharts.createSeriesMarkers({series_var}, {markers_js});"
         )
 
+    # Render price lines
+    for price_line in series.price_lines:
+        pl_js = json.dumps(convert_options_to_js(price_line))
+        lines.append(f"{series_var}.createPriceLine({pl_js});")
+
     return "\n    ".join(lines)
 
 

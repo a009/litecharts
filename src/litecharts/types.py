@@ -219,6 +219,7 @@ class ChartOptions(TypedDict, total=False):
 class PriceLineOptions(TypedDict, total=False):
     """Options for price lines."""
 
+    id: str
     price: float
     color: str
     line_width: int
