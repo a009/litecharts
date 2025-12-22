@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from litecharts import Chart, create_chart
+from litecharts import Chart, create_chart, create_series_markers
 from litecharts.series import (
     AreaSeries,
     CandlestickSeries,
@@ -76,7 +76,8 @@ class TestEndToEndChartCreation:
         chart = create_chart()
         series = chart.add_series(CandlestickSeries)
         series.set_data(sample_ohlc_dicts)
-        series.set_markers(
+        create_series_markers(
+            series,
             [
                 {
                     "time": 1609459200,
@@ -84,11 +85,45 @@ class TestEndToEndChartCreation:
                     "shape": "arrow_down",
                     "color": "#f44336",
                 }
-            ]
+            ],
         )
 
         assert len(series.markers) == 1
         assert series.markers[0]["position"] == "above_bar"
+
+    def test_chart_with_marker_tooltips(
+        self, sample_ohlc_dicts: list[DataMapping]
+    ) -> None:
+        """Create chart with marker tooltips."""
+        chart = create_chart()
+        series = chart.add_series(CandlestickSeries)
+        series.set_data(sample_ohlc_dicts)
+        create_series_markers(
+            series,
+            [
+                {
+                    "time": 1609459200,
+                    "position": "above_bar",
+                    "shape": "arrow_down",
+                    "color": "#f44336",
+                    "id": "trade-1",
+                    "tooltip": {
+                        "title": "Sell Signal",
+                        "fields": {"Price": "$100", "PnL": "+$50"},
+                    },
+                }
+            ],
+        )
+
+        assert len(series.markers) == 1
+        assert series.markers[0]["tooltip"]["title"] == "Sell Signal"
+
+        # Verify HTML contains tooltip code
+        html = chart.to_html()
+        assert "subscribeCrosshairMove" in html
+        assert "markerTooltips_" in html
+        assert "trade-1" in html
+        assert "Sell Signal" in html
 
 
 class TestHtmlOutputRegression:
@@ -200,7 +235,8 @@ class TestHtmlOutputRegression:
         series = pane.add_series(CandlestickSeries)
         series._id = "series_test0006"
         series.set_data(sample_ohlc_dicts)
-        series.set_markers(
+        create_series_markers(
+            series,
             [
                 {
                     "time": 1609459200,
@@ -208,6 +244,11 @@ class TestHtmlOutputRegression:
                     "shape": "arrow_down",
                     "color": "#f44336",
                     "text": "Sell",
+                    "id": "sell-1",
+                    "tooltip": {
+                        "title": "Sell Signal",
+                        "fields": {"Price": "$105", "PnL": "+$10"},
+                    },
                 },
                 {
                     "time": 1609632000,
@@ -215,8 +256,13 @@ class TestHtmlOutputRegression:
                     "shape": "arrow_up",
                     "color": "#4caf50",
                     "text": "Buy",
+                    "id": "buy-1",
+                    "tooltip": {
+                        "title": "Buy Signal",
+                        "fields": {"Price": "$115", "Size": "100"},
+                    },
                 },
-            ]
+            ],
         )
 
         html = chart.to_html()

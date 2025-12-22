@@ -357,6 +357,16 @@ class PaneOptions(TypedDict, total=False):
     height_ratio: float
 
 
+class MarkerTooltip(TypedDict, total=False):
+    """Tooltip content for a marker.
+
+    Displayed when hovering over a marker that has an 'id' field.
+    """
+
+    title: str
+    fields: dict[str, str]
+
+
 class Marker(TypedDict, total=False):
     """Marker to display on a series."""
 
@@ -367,6 +377,7 @@ class Marker(TypedDict, total=False):
     text: str
     size: int
     id: str
+    tooltip: MarkerTooltip
 
 
 class OhlcData(TypedDict, total=False):

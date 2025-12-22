@@ -10,6 +10,7 @@ from .series import (
     CandlestickSeries,
     HistogramSeries,
     LineSeries,
+    create_series_markers,
 )
 from .types import (
     AreaSeriesOptions,
@@ -35,6 +36,7 @@ from .types import (
     LineSeriesOptions,
     LocalizationOptions,
     Marker,
+    MarkerTooltip,
     OhlcData,
     PaneOptions,
     PriceFormat,
@@ -80,6 +82,7 @@ __all__ = [
     "LineSeriesOptions",
     "LocalizationOptions",
     "Marker",
+    "MarkerTooltip",
     "OhlcData",
     "Pane",
     "PaneOptions",
@@ -91,4 +94,5 @@ __all__ = [
     "TimeScaleOptions",
     "WatermarkOptions",
     "create_chart",
+    "create_series_markers",
 ]

@@ -93,22 +93,6 @@ class BaseSeries(ABC, Generic[DataInputT]):
             normalized["time"] = to_unix_timestamp(normalized["time"])
         self._data.append(normalized)
 
-    def set_markers(self, markers: list[Marker]) -> None:
-        """Set markers on the series.
-
-        Args:
-            markers: List of marker dicts.
-        """
-        from .convert import to_unix_timestamp
-
-        self._markers = []
-        for marker in markers:
-            normalized: Marker = marker.copy()
-            if "time" in normalized:
-                time_val = normalized["time"]
-                normalized["time"] = to_unix_timestamp(time_val)
-            self._markers.append(normalized)
-
 
 class CandlestickSeries(BaseSeries[OhlcInput]):
     """Candlestick chart series."""
@@ -216,3 +200,34 @@ class BaselineSeries(BaseSeries[SingleValueInput]):
     def _convert_data(self, data: SingleValueInput) -> list[OhlcData | SingleValueData]:
         """Convert data to single-value format."""
         return to_lwc_single_value_data(data)
+
+
+def create_series_markers(
+    series: BaseSeries[SingleValueInput] | BaseSeries[OhlcInput],
+    markers: list[Marker],
+) -> None:
+    """Create markers on a series.
+
+    This mirrors the LWC v5 API pattern where markers are created via
+    a separate function rather than a method on the series.
+
+    Args:
+        series: The series to add markers to.
+        markers: List of marker dicts.
+
+    Example:
+        >>> series = chart.add_series(CandlestickSeries)
+        >>> series.set_data(ohlc_data)
+        >>> create_series_markers(series, [
+        ...     {"time": 1609459200, "position": "above_bar", "shape": "arrow_down",
+        ...      "color": "#f44336", "text": "Sell"}
+        ... ])
+    """
+    from .convert import to_unix_timestamp
+
+    series._markers = []
+    for marker in markers:
+        normalized: Marker = marker.copy()
+        if "time" in normalized:
+            normalized["time"] = to_unix_timestamp(normalized["time"])
+        series._markers.append(normalized)

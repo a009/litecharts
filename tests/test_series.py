@@ -9,6 +9,7 @@ from litecharts.series import (
     CandlestickSeries,
     HistogramSeries,
     LineSeries,
+    create_series_markers,
 )
 
 from .conftest import DataMapping
@@ -59,14 +60,38 @@ class TestCandlestickSeries:
         )
         assert len(series.data) == 1
 
-    def test_set_markers(self) -> None:
-        """set_markers stores normalized markers."""
+    def test_create_series_markers(self) -> None:
+        """create_series_markers stores normalized markers."""
         series = CandlestickSeries()
-        series.set_markers(
-            [{"time": 1609459200, "position": "above_bar", "shape": "circle"}]
+        create_series_markers(
+            series, [{"time": 1609459200, "position": "above_bar", "shape": "circle"}]
         )
         assert len(series.markers) == 1
         assert series.markers[0]["time"] == 1609459200
+
+    def test_create_series_markers_with_tooltip(self) -> None:
+        """create_series_markers preserves tooltip data."""
+        series = CandlestickSeries()
+        create_series_markers(
+            series,
+            [
+                {
+                    "time": 1609459200,
+                    "position": "above_bar",
+                    "shape": "arrow_down",
+                    "color": "#ff0000",
+                    "id": "trade-1",
+                    "tooltip": {
+                        "title": "Sell Signal",
+                        "fields": {"Price": "$100", "PnL": "+$50"},
+                    },
+                }
+            ],
+        )
+        assert len(series.markers) == 1
+        assert series.markers[0]["id"] == "trade-1"
+        assert series.markers[0]["tooltip"]["title"] == "Sell Signal"
+        assert series.markers[0]["tooltip"]["fields"]["PnL"] == "+$50"
 
 
 class TestLineSeries:

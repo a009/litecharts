@@ -36,3 +36,4 @@ uv.lock
 # Dev tools
 CLAUDE.md
 claude-docs/
+.mcp.json

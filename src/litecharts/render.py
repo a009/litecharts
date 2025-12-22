@@ -7,12 +7,27 @@ from typing import TYPE_CHECKING, cast
 
 from ._js import get_lwc_js
 from .convert import convert_options_to_js, convert_options_to_js_list
+from .plugins.marker_tooltips import extract_marker_tooltips, render_tooltip_js
 
 if TYPE_CHECKING:
     from .chart import Chart
     from .pane import Pane
     from .series import BaseSeries
     from .types import OhlcInput, SingleValueInput
+
+
+def _strip_tooltip_from_markers(
+    markers: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Strip tooltip field from markers before sending to LWC.
+
+    Args:
+        markers: List of marker dicts that may contain tooltip field.
+
+    Returns:
+        List of marker dicts without tooltip field.
+    """
+    return [{k: v for k, v in marker.items() if k != "tooltip"} for marker in markers]
 
 
 def _render_series_js(
@@ -39,8 +54,14 @@ def _render_series_js(
     ]
 
     if series.markers:
-        markers_js = json.dumps(convert_options_to_js_list(series.markers))
-        lines.append(f"{series_var}.setMarkers({markers_js});")
+        # Strip tooltip field before sending to LWC (it's handled separately)
+        markers_for_lwc = _strip_tooltip_from_markers(
+            convert_options_to_js_list(series.markers)
+        )
+        markers_js = json.dumps(markers_for_lwc)
+        lines.append(
+            f"LightweightCharts.createSeriesMarkers({series_var}, {markers_js});"
+        )
 
     return "\n    ".join(lines)
 
@@ -170,6 +191,11 @@ def render_chart(chart: Chart) -> str:
         # Add series
         for series in pane.series:
             js_lines.append(_render_series_js(series, chart_var))
+
+        # Add marker tooltips if any markers have tooltip data (plugin)
+        tooltips = extract_marker_tooltips(pane)
+        if tooltips:
+            js_lines.append(render_tooltip_js(chart_var, pane_container, tooltips))
 
         chart_js_parts.append("\n    ".join(js_lines))
 

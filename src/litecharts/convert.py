@@ -9,6 +9,15 @@ from typing import TYPE_CHECKING, Any
 
 from .types import DataValue, OhlcData, SingleValueData
 
+# Known enum values that need snake_case -> camelCase conversion
+_ENUM_VALUE_CONVERSIONS: dict[str, str] = {
+    "above_bar": "aboveBar",
+    "below_bar": "belowBar",
+    "in_bar": "inBar",
+    "arrow_up": "arrowUp",
+    "arrow_down": "arrowDown",
+}
+
 if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
@@ -306,11 +315,13 @@ def to_camel_case(name: str) -> str:
 def convert_options_to_js(options: Mapping[str, Any]) -> dict[str, Any]:
     """Recursively convert option keys from snake_case to camelCase.
 
+    Also converts known enum string values (e.g., "above_bar" -> "aboveBar").
+
     Args:
         options: Dict with snake_case keys (typically a TypedDict).
 
     Returns:
-        Dict with camelCase keys.
+        Dict with camelCase keys and converted enum values.
     """
     result: dict[str, Any] = {}
 
@@ -319,6 +330,8 @@ def convert_options_to_js(options: Mapping[str, Any]) -> dict[str, Any]:
 
         if isinstance(value, dict):
             result[camel_key] = convert_options_to_js(value)
+        elif isinstance(value, str):
+            result[camel_key] = _ENUM_VALUE_CONVERSIONS.get(value, value)
         else:
             result[camel_key] = value
 
