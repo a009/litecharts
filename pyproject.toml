@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "litecharts"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python wrapper for TradingView Lightweight Charts"
 readme = "README.md"
 license = "MIT"
@@ -36,8 +36,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/chad/litecharts"
-Repository = "https://github.com/chad/litecharts"
+Homepage = "https://github.com/ChadThackray/litecharts"
+Repository = "https://github.com/ChadThackray/litecharts"
 
 [tool.hatch.build.targets.sdist]
 include = [
